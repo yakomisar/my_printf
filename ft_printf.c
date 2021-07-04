@@ -21,6 +21,29 @@ void	ft_putchar(char c)
 	write(1, &c, 1);
 }
 
+int	ft_get_ptrlen(unsigned long long arg)
+{
+	int	i;
+
+	i = 0;
+	while (arg != 0)
+	{
+		arg = arg / 16;
+		i++;
+	}
+	return (i);
+}
+
+size_t	ft_strlen(char *s)
+{
+	size_t	i;
+
+	i = 0;
+	while (s[i] != '\0')
+		i++;
+	return (i);
+}
+
 int	ft_atoi(const char *str)
 {
 	char		*s;
@@ -64,8 +87,13 @@ void	ft_parse_flags(t_list *flags)
 	while (*flags->str == '0' || *flags->str == '-')
 	{
 		if (*flags->str == '-')
+		{
 			flags->minus = 1;
-		if (*flags->str == '0')
+			flags->zero = 0;
+			while (*flags->str == '0' || *flags->str == '-')
+				flags->str++;
+		}
+		else if (*flags->str == '0')
 			flags->zero = 1;
 		flags->str++;
 	}
@@ -99,9 +127,12 @@ void	ft_parse_width(t_list *width)
 
 void	ft_parse_precision(t_list *list)
 {
+	int	pre;
+
+	pre = 0;
 	if (*list->str == '.')
 	{
-		list->str = list->str++;
+		list->str++;
 		if (*list->str == '*')
 		{
 			list->precision = va_arg(list->arguments, int);
@@ -113,11 +144,12 @@ void	ft_parse_precision(t_list *list)
 		{
 			while (*list->str >= '0' && *list->str <= '9')
 			{
-				list->precision = list->precision * 10 + (list->precision - '0');
+				pre = pre * 10 + (*list->str - '0');
 				list->str++;
 			}
 		}
 	}
+	list->precision = pre;
 }
 
 void	ft_detect_format(t_list *check)
@@ -153,9 +185,9 @@ void	ft_print_symbol(char symbol, int width, t_list *check)
 	check->length++;
 }
 
-void	ft_process_char(t_list *check)
+void	ft_char(t_list *check)
 {
-	char c;
+	char	c;
 
 	c = va_arg(check->arguments, int);
 	if (check->minus == 1)
@@ -171,10 +203,156 @@ void	ft_process_char(t_list *check)
 	check->str++;
 }
 
+void	ft_print_space(char c, t_list *check, int len)
+{
+	while (len > 0)
+	{
+		ft_putchar(c);
+		len--;
+		check->length++;
+	}	
+}
+
+void	ft_putstr(char *s, int len, t_list *check)
+{
+	int	i;
+	
+	i = 0;
+	while (len > 0)
+	{
+		ft_putchar(s[i]);
+		check->length++;
+		len--;
+		i++;
+	}
+}
+
+void	ft_string(t_list *check)
+{
+	char	*s;
+	int		w;
+
+	s = va_arg(check->arguments, char *);
+	if (s == NULL)
+		s = "(null)";
+	if (check->precision > ft_strlen(s) || check->precision < 0)
+		check->precision = ft_strlen(s);
+	if (check->minus == 0)
+	{
+		w = check->width - check->precision;
+		ft_print_space(' ', check, w);
+		ft_putstr(s, check->precision, check);
+	}
+	if (check->minus == 1)
+	{
+		ft_putstr(s, check->precision, check);
+		w = check->width - check->precision;
+		ft_print_space(' ', check, w);
+	}
+}
+
+void	ft_percent(t_list *check)
+{
+	if (check->minus == 1)
+	{
+		ft_putchar('%');
+		check->length++;
+		ft_print_space(' ', check, (check->width - 1));
+	}
+	else
+	{
+		if (check->zero == 1)
+		{
+			ft_print_space('0', check, (check->width - 1));
+			ft_putchar('%');
+			check->length++;
+		}
+		else
+		{
+			ft_print_space(' ', check, (check->width - 1));
+			ft_putchar('%');
+			check->length++;
+		}
+	}
+}
+
+int	ft_ptr_len(unsigned long pointer)
+{
+	int	i;
+
+	i = 0;
+	while (pointer != 0)
+	{
+		pointer = pointer / 16;
+		i++;
+	}
+	return (i);
+}
+
+void    ft_unl_to_hex(unsigned long value, t_list *check)
+{
+    unsigned long 	hex;
+	char			symbol;
+		
+	hex = 0;
+	if (!value)
+		return ;
+	else
+	{
+		hex = value % 16;
+		ft_unl_to_hex(value / 16, check);
+	}
+	if (hex > 9)
+	{
+		symbol = 'a' + (hex - 10);
+        ft_putchar(symbol);
+		check->length++;
+	}
+	else
+	{
+		symbol = hex + '0';
+        ft_putchar(symbol);
+		check->length++;
+	}
+}
+
+void	ft_print_zero(char c, int len, t_list *check)
+{
+	while (len > 0)
+	{
+		write(1, &c, 1);
+		check->length++;
+		len--;
+	}
+}
+
+void	ft_pointer(t_list *check)
+{
+	unsigned long	ptr;
+	int				len;
+
+	check->str++;
+	ptr = va_arg(check->arguments, unsigned long);
+	len = ft_ptr_len(ptr);
+	if (check->precision > len)
+	{
+		write(1, "0x", 2);
+		ft_print_zero('0', (check->precision - len), check);
+	}
+
+	ft_unl_to_hex(ptr, check);
+}
+
 void	ft_process_format(t_list *check)
 {
 	if (check->type == 1)
-		ft_process_char(check);
+		ft_char(check);
+	if (check->type == 2)
+		ft_string(check);
+	if (check->type == 3)
+		ft_pointer(check);
+	if (check->type == 7)
+		ft_percent(check);
 }
 
 void	ft_check_format(t_list *check)
@@ -208,19 +386,88 @@ int	ft_printf(const char *format, ...)
 		if (*list->str && *list->str == '%')
 			ft_check_format(list);
 	}
-	printf("\nlength is: %d\n", list->length);
+	//printf("\nlength is: %d\n", list->length);
 	va_end(list->arguments);
 	free(list);
 	return (list->length);
 }
 
-int	main()
+int main()
 {
-	int a;
-	const char	*z = "So%cme";
-	//a = ft_printf(z);
-	printf("\n");
-	char c = 'X';
-	ft_printf("%10c", c);
+
+	int *a;
+    int result;
+	int my_result;
+	// int b = 0;
+    // int *int_pointer;
+    // int_pointer = &a;
+    // void *void_pointer;
+    // char *char_pointer = NULL;
+	my_result = ft_printf("%.16p", a);
+    printf("\n");
+    result = printf("%.16p", a);
+
+	//printf("%p\n", void_pointer);
+    // printf("\n");
+	// ft_printf("%p\n", int_pointer);
+
+	// int kek = 0, lol = 0;
+
+	// printf("\n Проверка вывода \n\n");
+
+	// kek = ft_printf("1.my_printf: %c end\n", 'o');
+	// lol = printf("2.or_printf: %c end\n", 'o');
+	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
+
+	// kek = ft_printf("1.my_printf: %2.5c end\n", 'q');
+	// lol = printf("2.or_printf: %2.5c end\n", 'q');
+	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
+
+	// kek = ft_printf("1.my_printf: %-4c end\n", 'q');
+	// lol = printf("2.or_printf: %-4c end\n", 'q');
+	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
+
+	// kek = ft_printf("1.my_printf: %c end\n", 'q');
+	// lol = printf("2.or_printf: %c end\n", 'q');
+	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
+
+	// kek = ft_printf("1.my_printf: %-*c end\n", 7, 'q');
+	// lol = printf("2.or_printf: %-*c end\n", 7, 'q');
+	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
+
+	// kek = ft_printf("1.my_printf: %*c end\n", 5, 'q');
+	// lol = printf("2.or_printf: %*c end\n", 5, 'q');
+	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
+
+	// kek = ft_printf("1.my_printf: %*c %c end\n", 5, 'q', 'w');
+	// lol = printf("2.or_printf: %*c %c end\n", 5, 'q', 'w');
+	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
+
+	// kek = ft_printf("1.my_printf: %*c %-*c end\n", 5, 'q', 3, 'w');
+	// lol = printf("2.or_printf: %*c %-*c end\n", 5, 'q', 3, 'w');
+	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
+
 	return (0);
+}
+
+
+
+if (width > pre)
+{
+	if (pre > strlen)
+	{
+		if (dot == 1 && pre == 0)
+		else if (dot == 1 && pre != 0)
+		else if (dot == 0)
+	}
+	else
+	{
+		if (dot == 1 && pre == 0)
+		else if (dot == 1 && pre != 0)
+		else if (dot == 0)
+	}
+}
+else 
+{
+
 }
