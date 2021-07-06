@@ -14,6 +14,7 @@ typedef struct s_list
 	int			precision;
 	int			star;
 	int			length;
+	char		hex_type;
 }				t_list;
 
 void	ft_putchar(char c)
@@ -168,7 +169,13 @@ void	ft_detect_format(t_list *check)
 	if (*check->str == 'u')
 		format = 5;
 	if (*check->str == 'x' || *check->str == 'X')
+	{
 		format = 6;
+		if (*check->str == 'x')
+			check->hex_type = 'x';
+		else
+			check->hex_type = 'X';
+	}
 	if (*check->str == '%')
 		format = 7;
 	check->type = format;
@@ -343,6 +350,83 @@ void	ft_pointer(t_list *check)
 	ft_unl_to_hex(ptr, check);
 }
 
+void	ft_print_hex(unsigned int value, t_list *check)
+{
+	unsigned int 	hex;
+	
+	hex = 0;
+	if (!hex)
+		return ;
+	else
+	{
+		hex = value % 16;
+		ft_unl_to_hex(value / 16, check);
+	}
+	if (hex > 9)
+	{
+		if (check->hex_type == 'x')
+		{
+        	ft_putchar('a' + hex - 10);
+			check->length++;	
+		}
+		else
+		{
+        	ft_putchar('A' + hex - 10);
+			check->length++;
+		}
+	}
+	else
+	{
+        ft_putchar(hex + '0');
+		check->length++;
+	}
+}
+
+void	ft_hex(unsigned int hex, t_list *check, int p_r, int len)
+{
+	if (check->minus == 0)
+	{
+		if (check->precision >= 0)
+		{
+			ft_print_space(' ', check, (check->width - p_r));
+			ft_print_zero('0', (p_r - len), check);
+			ft_print_hex(hex, check);
+		}
+		else
+		{
+			ft_print_symbol(' ', (check->width - p_r), check);
+			ft_print_hex(hex, check);
+		}
+	}
+	else
+	{
+		ft_print_space('0', check, (p_r - len));
+		ft_print_hex(hex, check);
+		ft_print_space(' ', check, (check->width - len));
+	}
+}
+
+void	ft_handle_x(t_list *check)
+{
+	unsigned int	x;
+	int				len;
+	int				p_r;
+
+	check->str++;
+	x = va_arg(check->arguments, unsigned int);
+	if (x == 0 && check->precision == 0)
+	{
+		ft_print_space(' ', check, check->width);
+		return ;
+	}
+	len = ft_ptr_len(x);
+	if (check->precision > len)
+		p_r = check->precision;
+	else
+		p_r = len;
+	ft_hex(x, check, p_r, len);
+}
+
 void	ft_process_format(t_list *check)
 {
 	if (check->type == 1)
@@ -351,6 +435,8 @@ void	ft_process_format(t_list *check)
 		ft_string(check);
 	if (check->type == 3)
 		ft_pointer(check);
+	if (check->type == 6)
+		ft_handle_x(check);
 	if (check->type == 7)
 		ft_percent(check);
 }
@@ -398,11 +484,6 @@ int main()
 	int *a;
     int result;
 	int my_result;
-	// int b = 0;
-    // int *int_pointer;
-    // int_pointer = &a;
-    // void *void_pointer;
-    // char *char_pointer = NULL;
 	my_result = ft_printf("%.16p", a);
     printf("\n");
     result = printf("%.16p", a);
@@ -448,26 +529,4 @@ int main()
 	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
 
 	return (0);
-}
-
-
-
-if (width > pre)
-{
-	if (pre > strlen)
-	{
-		if (dot == 1 && pre == 0)
-		else if (dot == 1 && pre != 0)
-		else if (dot == 0)
-	}
-	else
-	{
-		if (dot == 1 && pre == 0)
-		else if (dot == 1 && pre != 0)
-		else if (dot == 0)
-	}
-}
-else 
-{
-
 }
