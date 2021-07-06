@@ -333,21 +333,93 @@ void	ft_print_zero(char c, int len, t_list *check)
 	}
 }
 
+void	ft_print_pointer(t_list *check)
+{
+	if (check->minus == 1)
+	{
+		ft_putstr("0x", 2, check);
+		ft_print_zero('0', check->precision, check);
+		ft_print_space(' ', check, (check->width - check->precision - 2));
+	}
+	else
+	{
+		ft_print_space(' ', check, (check->width - check->precision - 2));
+		ft_putstr("0x", 2, check);
+		ft_print_zero('0', check->precision, check);
+	}
+}
+
+void	ft_print_zero_pointer(t_list *check)
+{
+	if (check->minus == 0)
+	{
+		ft_print_space(' ', check, (check->width - 3));
+		ft_putstr("0x0", 3, check);
+	}
+	else if (check->minus == 1)
+	{
+		ft_print_space("0x0", check, 3);
+		ft_print_space(' ', check, (check->width - 3));
+	}
+}
+
+void	ft_print_pnmz(unsigned long ptr, int p_len, t_list *check)
+{
+	int	len;
+
+	if (check->precision > p_len)
+		len = check->precision;
+	else
+		len = p_len;
+	if (check->precision == -1)
+		ft_print_space(' ', check, (check->width - p_len - 2));
+	else
+		ft_print_space(' ', check, (check->width - len - 2));
+	ft_putstr("0x", 2, check);
+	ft_print_space('0', check, (check->precision - p_len));
+	ft_unl_to_hex(ptr, check);
+}
+
+void	ft_print_p(unsigned long ptr, int len, t_list *check)
+{
+	if (check->minus == 0)
+	{
+		if (check->zero == 1)
+		{
+			ft_print_pnmz(ptr, len, check);
+		}
+		else
+		{
+			// to be completed
+		}
+	}
+	else if (check->minus == 1)
+	{
+		ft_putstr("0x", 2, check);
+		ft_print_zero('0', (check->precision - len), check);
+		ft_unl_to_hex(ptr, check);
+		ft_print_space(' ', check, (check->width - check->precision - len - 2));
+	}
+}
+
 void	ft_pointer(t_list *check)
 {
 	unsigned long	ptr;
 	int				len;
 
-	check->str++;
 	ptr = va_arg(check->arguments, unsigned long);
-	len = ft_ptr_len(ptr);
-	if (check->precision > len)
+	if (check->precision >= 0 && ptr == 0)
 	{
-		write(1, "0x", 2);
-		ft_print_zero('0', (check->precision - len), check);
+		ft_print_pointer(check);
+		return ;
 	}
-
-	ft_unl_to_hex(ptr, check);
+	if (ptr == 0)
+	{
+		ft_print_zero_pointer(check);
+		return ;
+	}
+	len = ft_ptr_len(ptr);
+	ft_print_p(ptr, len, check);
 }
 
 void	ft_print_hex(unsigned int value, t_list *check)
@@ -414,7 +486,7 @@ void	ft_handle_x(t_list *check)
 
 	check->str++;
 	x = va_arg(check->arguments, unsigned int);
-	if (x == 0 && check->precision == 0)
+	if (check->precision == 0 && x == 0)
 	{
 		ft_print_space(' ', check, check->width);
 		return ;
