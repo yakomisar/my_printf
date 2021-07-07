@@ -380,18 +380,37 @@ void	ft_print_pnmz(unsigned long ptr, int p_len, t_list *check)
 	ft_unl_to_hex(ptr, check);
 }
 
+void	ft_printnmnz(unsigned long ptr, int p_len, t_list *check)
+{
+	int	len;
+
+	if (check->precision > 0)
+		len = check->precision;
+	else
+		len = 0;
+	if (check->precision == -1)
+	{
+		ft_putstr("0x", 2, check);
+		ft_print_zero('0', (check->width - p_len - 2), check);
+		ft_unl_to_hex(ptr, check);
+	}
+	else
+	{
+		ft_print_space(' ', check, (check->width - len - 2));
+		ft_putstr("0x", 2, check);
+		ft_print_space('0', check, (check->precision - p_len));
+		ft_unl_to_hex(ptr, check);
+	}
+}
+
 void	ft_print_p(unsigned long ptr, int len, t_list *check)
 {
 	if (check->minus == 0)
 	{
 		if (check->zero == 1)
-		{
 			ft_print_pnmz(ptr, len, check);
-		}
 		else
-		{
-			// to be completed
-		}
+			ft_printnmnz(ptr, len, check);
 	}
 	else if (check->minus == 1)
 	{
@@ -432,7 +451,7 @@ void	ft_print_hex(unsigned int value, t_list *check)
 	else
 	{
 		hex = value % 16;
-		ft_unl_to_hex(value / 16, check);
+		ft_print_hex(value / 16, check);
 	}
 	if (hex > 9)
 	{
@@ -499,6 +518,193 @@ void	ft_handle_x(t_list *check)
 	ft_hex(x, check, p_r, len);
 }
 
+int	ft_unsigned_len(unsigned int value)
+{
+	int	i;
+
+	i = 0;
+	while (value != 0)
+	{
+		value = value / 10;
+		i++;
+	}
+	return (i);
+}
+
+void	ft_print_un(unsigned int value, t_list *check)
+{
+	unsigned int 	uns;
+	
+	uns = 0;
+	if (!uns)
+		return ;
+	else
+	{
+		uns = value % 10;
+		ft_print_un(value / 10, check);
+	}
+	if (uns > 9)
+	{
+		ft_putchar('a' + uns - 10);
+		check->length++;
+	}
+	else
+	{
+        ft_putchar(uns + '0');
+		check->length++;
+	}
+}
+
+void	ft_print_unsigned(unsigned int value, int uns_len, int len, t_list *check)
+{
+	if (check->minus == 0)
+	{
+		if (check->precision >= 0)
+		{
+			ft_print_space(' ', check, (check->width - uns_len));
+			ft_print_zero('0', uns_len - len, check);
+			ft_print_un(value, check);
+		}
+		else
+		{
+			ft_print_symbol(' ', check->width - uns_len, 1);
+			ft_print_un(value, check);
+		}
+	}
+	else
+	{
+		ft_print_space('0', check, (uns_len - len));
+		ft_print_un(value, check);
+		ft_print_space(' ', check, (check->width - uns_len));
+	}
+}
+
+void	ft_unsigned(t_list *check)
+{
+	unsigned int	value;
+	int				uns_len;
+	int				len;
+
+	value = va_arg(check->arguments, unsigned int);
+	if (check->precision == 0 && value == 0)
+	{
+		ft_print_space(' ', check, check->width);
+		return ;
+	}
+	len = ft_unsigned_len(value);
+	if (check->precision > len)
+		uns_len = check->precision;
+	else
+		uns_len = len;
+	ft_print_unsigned(value, uns_len, len, check);
+}
+
+int	ft_int_len(int value)
+{
+	int	i;
+
+	i = 0;
+	while (value != 0)
+	{
+		value = value / 10;
+		i++;
+	}
+	return (i);
+}
+
+int	ft_change_sign(int value)
+{
+	int	m;
+
+	if (value >= 0)
+		m = value;
+	else
+		m = -value;
+	return (m);
+}
+
+void	ft_print_int(int value, t_list *check)
+{
+	int 	x;
+	int		value_int;
+	
+	x = 0;
+	value_int = ft_change_sign(value);
+	if (!x)
+		return ;
+	else
+	{
+		x = value_int % 10;
+		ft_print_int(value_int / 10, check);
+	}
+	if (x > 9)
+	{
+		ft_putchar('a' + x - 10);
+		check->length++;
+	}
+	else
+	{
+        ft_putchar(x + '0');
+		check->length++;
+	}
+}
+
+void	ft_p_i(int value, t_list *check, int len, int int_len, int sign)
+{
+	if (check->precision >= 0)
+	{
+		ft_print_space(' ', check, check->width - len - sign);
+		ft_print_symbol('-', sign, check);
+		ft_print_zero('0', len - int_len, check);
+		ft_print_int(value, check);
+	}
+	else
+	{
+		if (check->zero == 0)
+			ft_print_space(' ', check, (check->width - int_len - sign));
+		ft_print_symbol('-', sign, check);
+		if (check->zero == 1)
+			ft_print_zero('0', (check->width - int_len - sign), check);
+		ft_print_int(value, check);
+	}
+}
+
+void	ft_print_integer(int value, t_list *check, int len, int int_len, int sign)
+{
+	if (check->minus == 0)
+		ft_print_integer_2(value, check, len, int_len, sign);
+	else
+	{
+		ft_print_symbol('-', sign, check);
+		ft_print_zero('0', len - int_len, check);
+		ft_print_int(value, check);
+		ft_print_space(' ', check, check->width - len - sign);
+	}
+}
+
+void	ft_int(t_list *check)
+{
+	int	len;
+	int	int_len;
+	int	value;
+	int	sign;
+
+	value = va_arg(check->arguments, int);
+	if (check->precision == 0 && value == 0)
+	{
+		ft_print_space(' ', check, check->width);
+		return ;
+	}
+	int_len = ft_int_len(value);
+	if (value < 0)
+		sign = 1;
+	if (check->precision > len)
+		len = check->precision;
+	else
+		len = int_len;
+	ft_print_integer(value, check, len, int_len, sign);	
+}
+
 void	ft_process_format(t_list *check)
 {
 	if (check->type == 1)
@@ -507,6 +713,10 @@ void	ft_process_format(t_list *check)
 		ft_string(check);
 	if (check->type == 3)
 		ft_pointer(check);
+	if (check->type == 4)
+		ft_int(check);
+	if (check->type == 5)
+		ft_unsigned(check);
 	if (check->type == 6)
 		ft_handle_x(check);
 	if (check->type == 7)
@@ -516,7 +726,7 @@ void	ft_process_format(t_list *check)
 void	ft_check_format(t_list *check)
 {
 	ft_clean_flags(check);
-	check->str++; // move from % to the next character
+	check->str++;
 	ft_parse_flags(check);
 	ft_parse_width(check);
 	ft_parse_precision(check);
@@ -544,7 +754,6 @@ int	ft_printf(const char *format, ...)
 		if (*list->str && *list->str == '%')
 			ft_check_format(list);
 	}
-	//printf("\nlength is: %d\n", list->length);
 	va_end(list->arguments);
 	free(list);
 	return (list->length);
@@ -559,46 +768,5 @@ int main()
 	my_result = ft_printf("%.16p", a);
     printf("\n");
     result = printf("%.16p", a);
-
-	//printf("%p\n", void_pointer);
-    // printf("\n");
-	// ft_printf("%p\n", int_pointer);
-
-	// int kek = 0, lol = 0;
-
-	// printf("\n Проверка вывода \n\n");
-
-	// kek = ft_printf("1.my_printf: %c end\n", 'o');
-	// lol = printf("2.or_printf: %c end\n", 'o');
-	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
-
-	// kek = ft_printf("1.my_printf: %2.5c end\n", 'q');
-	// lol = printf("2.or_printf: %2.5c end\n", 'q');
-	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
-
-	// kek = ft_printf("1.my_printf: %-4c end\n", 'q');
-	// lol = printf("2.or_printf: %-4c end\n", 'q');
-	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
-
-	// kek = ft_printf("1.my_printf: %c end\n", 'q');
-	// lol = printf("2.or_printf: %c end\n", 'q');
-	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
-
-	// kek = ft_printf("1.my_printf: %-*c end\n", 7, 'q');
-	// lol = printf("2.or_printf: %-*c end\n", 7, 'q');
-	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
-
-	// kek = ft_printf("1.my_printf: %*c end\n", 5, 'q');
-	// lol = printf("2.or_printf: %*c end\n", 5, 'q');
-	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
-
-	// kek = ft_printf("1.my_printf: %*c %c end\n", 5, 'q', 'w');
-	// lol = printf("2.or_printf: %*c %c end\n", 5, 'q', 'w');
-	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
-
-	// kek = ft_printf("1.my_printf: %*c %-*c end\n", 5, 'q', 3, 'w');
-	// lol = printf("2.or_printf: %*c %-*c end\n", 5, 'q', 3, 'w');
-	// printf("mylen: %d\noriglen: %d\n\n", kek, lol);
-
 	return (0);
 }
