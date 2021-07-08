@@ -6,6 +6,19 @@ void	ft_putchar(char c)
 	write(1, &c, 1);
 }
 
+int	ft_putchars_fd(char c, int n)
+{
+	int	count;
+
+	count = 0;
+	while (count < n)
+	{
+		write(1, &c, 1);
+		count++;
+	}
+	return (count);
+}
+
 void	ft_print_zero(char c, int len, t_list *check)
 {
 	while (len > 0)
@@ -308,14 +321,14 @@ void	ft_print_pointer(t_list *check)
 	if (check->minus == 1)
 	{
 		ft_putstr("0x", 2, check);
-		ft_print_zero('0', check->precision, check);
-		ft_print_space(' ', check, (check->width - check->precision - 2));
+		check->length += ft_putchars_fd('0', check->precision);
+		check->length += ft_putchars_fd(' ', (check->width - check->precision - 2));
 	}
 	else
 	{
-		ft_print_space(' ', check, (check->width - check->precision - 2));
+		check->length += ft_putchars_fd(' ', (check->width - check->precision - 2));
 		ft_putstr("0x", 2, check);
-		ft_print_zero('0', check->precision, check);
+		check->length += ft_putchars_fd('0', check->precision);
 	}
 }
 
@@ -323,13 +336,13 @@ void	ft_print_zero_pointer(t_list *check)
 {
 	if (check->minus == 0)
 	{
-		ft_print_space(' ', check, (check->width - 3));
+		check->length += ft_putchars_fd(' ', (check->width - 3));
 		ft_putstr("0x0", 3, check);
 	}
 	else if (check->minus == 1)
 	{
 		ft_putstr("0x0", 3, check);
-		ft_print_space(' ', check, (check->width - 3));
+		check->length += ft_putchars_fd(' ', (check->width - 3));
 	}
 }
 
@@ -342,11 +355,11 @@ void	ft_print_pnmz(unsigned long ptr, int p_len, t_list *check)
 	else
 		len = p_len;
 	if (check->precision == -1)
-		ft_print_space(' ', check, (check->width - p_len - 2));
+		check->length += ft_putchars_fd(' ', (check->width - p_len - 2));
 	else
-		ft_print_space(' ', check, (check->width - len - 2));
+		check->length += ft_putchars_fd(' ', (check->width - len - 2));
 	ft_putstr("0x", 2, check);
-	ft_print_space('0', check, (check->precision - p_len));
+	check->length += ft_putchars_fd('0', (check->precision - p_len));
 	ft_unl_to_hex(ptr, check);
 }
 
@@ -361,14 +374,14 @@ void	ft_printnmnz(unsigned long ptr, int p_len, t_list *check)
 	if (check->precision == -1)
 	{
 		ft_putstr("0x", 2, check);
-		ft_print_zero('0', (check->width - p_len - 2), check);
+		check->length += ft_putchars_fd('0', (check->width - p_len - 2));
 		ft_unl_to_hex(ptr, check);
 	}
 	else
 	{
-		ft_print_space(' ', check, (check->width - len - 2));
+		check->length += ft_putchars_fd(' ', (check->width - len - 2));
 		ft_putstr("0x", 2, check);
-		ft_print_space('0', check, (check->precision - p_len));
+		check->length += ft_putchars_fd('0', (check->precision - p_len));
 		ft_unl_to_hex(ptr, check);
 	}
 }
@@ -385,9 +398,9 @@ void	ft_print_p(unsigned long ptr, int len, t_list *check)
 	else if (check->minus == 1)
 	{
 		ft_putstr("0x", 2, check);
-		ft_print_zero('0', (check->precision - len), check);
+		check->length += ft_putchars_fd('0', (check->precision - len));
 		ft_unl_to_hex(ptr, check);
-		ft_print_space(' ', check, (check->width - (check->precision - len) - len - 2));
+		check->length += ft_putchars_fd(' ', (check->width - (check->precision - len) - len - 2));
 	}
 }
 
@@ -631,19 +644,6 @@ void	ft_print_int(int value, t_list *check)
 	}
 }
 
-int	ft_putchars_fd(char c, int n)
-{
-	int	count;
-
-	count = 0;
-	while (count < n)
-	{
-		write(1, &c, 1);
-		count++;
-	}
-	return (count);
-}
-
 void	ft_p_i(int value, t_list *check, int len, int int_len)
 {
 	if (check->precision >= 0)
@@ -739,7 +739,6 @@ void	ft_check_format(t_list *check)
 	check->str++;
 	ft_parse_flags(check);
 	ft_parse_width(check);
-	//ft_parse_precision(check);
 	ft_detect_format(check);
 	if (check->type)
 		ft_process_format(check);
@@ -784,11 +783,14 @@ int	ft_printf(const char *format, ...)
 // 	// printf("\n");
 // 	// printf("%d", a);
 // 	// printf("\n");
-// 	b = ft_printf(" %.d ", 0);
+// 	b = ft_printf(" %-10p %10p ", 1, -1);
 // 	printf("\n");
 // 	printf("%d", b);
 // 	return (0);
-
+// 	// TEST(7, print(" %-10p %10p ", 1, -1));
+// 	// TEST(8, print(" %10p %-10p ", 1, -1));
+// 	// TEST(9, print(" %-10p %-10p ", 1, -1));
+// 	// TEST(10, print(" %10p %-10p ", 1, -1));
 // 	// TEST(3, print(" %-.2d ", 0));
 // 	// TEST(4, print(" %-2.2d ", 0));
 // }
