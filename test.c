@@ -1,20 +1,17 @@
 #include <stdio.h>
+int main() {
+    long long n;
+    int count = 0;
+    printf("Enter an integer: ");
+    scanf("%lld", &n);
+ 
+    // iterate until n becomes 0
+    // remove last digit from n in each iteration
+    // increase count by 1 in each iteration
+    while (n != 0) {
+        n /= 10;     // n = n/10
+        ++count;
+    }
 
-int main(void)
-{
-    // printf("Precision = 0\n");
-    // printf("%10.0x", 0);
-    // printf("\n");
-    // printf("Value = 0 and Precision = 0\n");
-    // printf("%12.10x", 25);
-    // printf("\n");
-    // printf("%.10x", 0);
-    // printf("%x", 20032621);
-    // printf("%x", 20032621);
-    // printf("%x", 20032621);
-    // printf("%x", 20032621);
-    char c = 'x';
-    printf("%c   ", c);
-
-    return (0);
+    printf("Number of digits: %d", count);
 }
