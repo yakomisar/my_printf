@@ -701,6 +701,7 @@ void	ft_int(t_list *check)
 	if (check->precision == 0 && value == 0)
 	{
 		check->length += ft_print_char(' ', check->width);
+		check->str++;
 		return ;
 	}
 	int_len = ft_int_len(value);
@@ -769,25 +770,25 @@ int	ft_printf(const char *format, ...)
 	return (list->length);
 }
 
-int main()
-{
-	// int a, b;
-	// a = printf(" %-10p %10p ", 1, -1);
-	// printf("%d", a);
-	// printf("\n");
-	// b = ft_printf(" %-10p %10p ", 1, -1);
-	// printf("%d", a);
-	// return (0);
-	int a, b;
-	// a = printf(" %.d ", 0);
-	// printf("\n");
-	// printf("%d", a);
-	// printf("\n");
-	b = ft_printf(" %.d ", 0);
-	printf("\n");
-	printf("%d", b);
-	return (0);
+// int main()
+// {
+// 	// int a, b;
+// 	// a = printf(" %-10p %10p ", 1, -1);
+// 	// printf("%d", a);
+// 	// printf("\n");
+// 	// b = ft_printf(" %-10p %10p ", 1, -1);
+// 	// printf("%d", a);
+// 	// return (0);
+// 	int a, b;
+// 	// a = printf(" %.d ", 0);
+// 	// printf("\n");
+// 	// printf("%d", a);
+// 	// printf("\n");
+// 	b = ft_printf(" %.d ", 0);
+// 	printf("\n");
+// 	printf("%d", b);
+// 	return (0);
 
-	// TEST(3, print(" %-.2d ", 0));
-	// TEST(4, print(" %-2.2d ", 0));
-}
+// 	// TEST(3, print(" %-.2d ", 0));
+// 	// TEST(4, print(" %-2.2d ", 0));
+// }
