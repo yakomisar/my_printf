@@ -278,41 +278,31 @@ void	ft_percent(t_list *check)
 
 int	ft_ptr_len(unsigned long pointer)
 {
-	int	count;
+	int	i;
 
-	count = 0;
-	while (pointer / 16 != 0)
+	i = 0;
+	if (pointer == 0)
+		return (1);
+	while (pointer != 0)
 	{
-		count++;
-		pointer /= 16;
+		pointer = pointer / 16;
+		i++;
 	}
-	count++;
-	return (count);
+	return (i);
 }
 
 void    ft_unl_to_hex(unsigned long value, t_list *check)
 {
-    unsigned long 	hex;
-	char			symbol;
-		
-	hex = 0;
-	if (!value)
-		return ;
-	else
-	{
-		hex = value % 16;
+	if (value / 16 != 0)
 		ft_unl_to_hex(value / 16, check);
-	}
-	if (hex > 9)
+	if ((value % 16) > 9)
 	{
-		symbol = 'a' + (hex - 10);
-        ft_putchar(symbol);
+		ft_putchar('a' + (value % 16) - 10);
 		check->length++;
 	}
 	else
 	{
-		symbol = hex + '0';
-        ft_putchar(symbol);
+        ft_putchar((value % 16) + '0');
 		check->length++;
 	}
 }
@@ -414,11 +404,13 @@ void	ft_pointer(t_list *check)
 	if (check->precision >= 0 && ptr == 0)
 	{
 		ft_print_pointer(check);
+		check->str++;
 		return ;
 	}
 	if (ptr == 0)
 	{
 		ft_print_zero_pointer(check);
+		check->str++;
 		return ;
 	}
 	len = ft_ptr_len(ptr);
@@ -428,32 +420,19 @@ void	ft_pointer(t_list *check)
 
 void	ft_print_hex(unsigned int value, t_list *check)
 {
-	unsigned int 	hex;
-	
-	hex = 0;
-	if (!hex)
-		return ;
-	else
-	{
-		hex = value % 16;
+	if (value / 16 != 0)
 		ft_print_hex(value / 16, check);
-	}
-	if (hex > 9)
+	if ((value % 16) > 9)
 	{
 		if (check->hex_type == 'x')
-		{
-        	ft_putchar('a' + hex - 10);
-			check->length++;	
-		}
+			ft_putchar('a' + (value % 16) - 10);
 		else
-		{
-        	ft_putchar('A' + hex - 10);
-			check->length++;
-		}
+			ft_putchar('A' + (value % 16) - 10);
+		check->length++;
 	}
 	else
 	{
-        ft_putchar(hex + '0');
+        ft_putchar((value % 16) + '0');
 		check->length++;
 	}
 }
@@ -470,15 +449,15 @@ void	ft_hex(unsigned int hex, t_list *check, int len, int x_len)
 		}
 		else
 		{
-			ft_print_symbol(' ', (check->width - p_r), check);
+			check->length += ft_putchars_fd(check->zero, (check->width - len));
 			ft_print_hex(hex, check);
 		}
 	}
 	else
 	{
-		ft_print_space('0', check, (p_r - len));
+		check->length += ft_putchars_fd('0', (len - x_len));
 		ft_print_hex(hex, check);
-		ft_print_space(' ', check, (check->width - len));
+		check->length += ft_putchars_fd(' ', (check->width - len));
 	}
 }
 
@@ -778,7 +757,7 @@ int	ft_printf(const char *format, ...)
 // 	// printf("\n");
 // 	// printf("%d", a);
 // 	// printf("\n");
-// 	b = ft_printf(" %-3.2u %10.42u ", 1, -1);
+// 	b = printf(" 0*%0-*x*0 0*%0*x*0 ", 21, 1021, 21, -1011);
 // 	printf("\n");
 // 	printf("%d", b);
 // 	return (0);
