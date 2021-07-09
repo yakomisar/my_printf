@@ -278,15 +278,16 @@ void	ft_percent(t_list *check)
 
 int	ft_ptr_len(unsigned long pointer)
 {
-	int	i;
+	int	count;
 
-	i = 0;
-	while (pointer != 0)
+	count = 0;
+	while (pointer / 16 != 0)
 	{
-		pointer = pointer / 16;
-		i++;
+		count++;
+		pointer /= 16;
 	}
-	return (i);
+	count++;
+	return (count);
 }
 
 void    ft_unl_to_hex(unsigned long value, t_list *check)
@@ -457,14 +458,14 @@ void	ft_print_hex(unsigned int value, t_list *check)
 	}
 }
 
-void	ft_hex(unsigned int hex, t_list *check, int p_r, int len)
+void	ft_hex(unsigned int hex, t_list *check, int len, int x_len)
 {
 	if (check->minus == 0)
 	{
 		if (check->precision >= 0)
 		{
-			ft_print_space(' ', check, (check->width - p_r));
-			ft_print_zero('0', (p_r - len), check);
+			check->length += ft_putchars_fd(' ', (check->width - len));
+			check->length += ft_putchars_fd('0', (len - x_len));
 			ft_print_hex(hex, check);
 		}
 		else
@@ -485,82 +486,75 @@ void	ft_handle_x(t_list *check)
 {
 	unsigned int	x;
 	int				len;
-	int				p_r;
+	int				x_len;
 
-	check->str++;
 	x = va_arg(check->arguments, unsigned int);
 	if (check->precision == 0 && x == 0)
 	{
-		ft_print_space(' ', check, check->width);
+		check->length += ft_putchars_fd(' ', check->width);
+		check->str++;
 		return ;
 	}
-	len = ft_ptr_len(x);
-	if (check->precision > len)
-		p_r = check->precision;
+	x_len = ft_ptr_len(x);
+	if (check->precision > x_len)
+		len = check->precision;
 	else
-		p_r = len;
-	ft_hex(x, check, p_r, len);
+		len = x_len;
+	ft_hex(x, check, len, x_len);
 	check->str++;
 }
 
 int	ft_unsigned_len(unsigned int value)
 {
-	int	i;
+	int	count;
 
-	i = 0;
-	while (value != 0)
+	count = 0;
+	while (value / 10 != 0)
 	{
-		value = value / 10;
-		i++;
+		count++;
+		value /= 10;
 	}
-	return (i);
+	count++;
+	return (count);
 }
 
 void	ft_print_un(unsigned int value, t_list *check)
 {
-	unsigned int 	uns;
-	
-	uns = 0;
-	if (!uns)
-		return ;
-	else
-	{
-		uns = value % 10;
+	if (value / 10 != 0)
 		ft_print_un(value / 10, check);
-	}
-	if (uns > 9)
+	if ((value % 10) > 9)
 	{
-		ft_putchar('a' + uns - 10);
+		ft_putchar('a' + (value % 10) - 10);
 		check->length++;
 	}
 	else
 	{
-        ft_putchar(uns + '0');
+        ft_putchar((value % 10) + '0');
 		check->length++;
 	}
 }
 
-void	ft_print_unsigned(unsigned int value, int uns_len, int len, t_list *check)
+void	ft_print_unsigned(unsigned int value, int len, int uns_len, t_list *check)
 {
 	if (check->minus == 0)
 	{
 		if (check->precision >= 0)
 		{
-			ft_print_space(' ', check, (check->width - uns_len));
-			ft_print_zero('0', uns_len - len, check);
+			check->length += ft_putchars_fd(' ', (check->width - len));
+			check->length += ft_putchars_fd('0', len - uns_len);
 			ft_print_un(value, check);
 		}
 		else
 		{
-			ft_print_space(' ', check, check->width - uns_len);
+			check->length += ft_putchars_fd(check->zero, check->width - len);
 			ft_print_un(value, check);
 		}
 	}
 	else
 	{
-		ft_print_space('0', check, (uns_len - len));
+		check->length += ft_putchars_fd('0', (len - uns_len));
 		ft_print_un(value, check);
-		ft_print_space(' ', check, (check->width - uns_len));
+		check->length += ft_putchars_fd(' ', (check->width - len));
 	}
 }
 
@@ -573,43 +567,44 @@ void	ft_unsigned(t_list *check)
 	value = va_arg(check->arguments, unsigned int);
 	if (check->precision == 0 && value == 0)
 	{
-		ft_print_space(' ', check, check->width);
+		check->length += ft_putchars_fd(' ', check->width);
+		check->str++;
 		return ;
 	}
-	len = ft_unsigned_len(value);
-	if (check->precision > len)
-		uns_len = check->precision;
+	uns_len = ft_unsigned_len(value);
+	if (check->precision > uns_len)
+		len = check->precision;
 	else
-		uns_len = len;
-	ft_print_unsigned(value, uns_len, len, check);
+		len = uns_len;
+	ft_print_unsigned(value, len, uns_len, check);
 	check->str++;
 }
 
 int	ft_int_len(int value)
 {
-	// int	i;
+	int	i;
 
-	// i = 0;
-	// if (value == 0)
-	// 	return (1);
-	// while (value != 0)
-	// {
-	// 	value = value / 10;
-	// 	i++;
-	// }
-	// return (i);
-	int	count;
-
-	count = 0;
-	if (value < 0)
-		value = -value;
-	while (value / 10 != 0)
+	i = 0;
+	if (value == 0)
+		return (1);
+	while (value != 0)
 	{
-		count++;
-		value /= 10;
+		value = value / 10;
+		i++;
 	}
-	count++;
-	return (count);
+	return (i);
+	// int	count;
+
+	// count = 0;
+	// if (value < 0)
+	// 	value = -value;
+	// while (value / 10 != 0)
+	// {
+	// 	count++;
+	// 	value /= 10;
+	// }
+	// count++;
+	// return (count);
 }
 
 int	ft_change_sign(int value)
@@ -783,14 +778,8 @@ int	ft_printf(const char *format, ...)
 // 	// printf("\n");
 // 	// printf("%d", a);
 // 	// printf("\n");
-// 	b = ft_printf(" %-10p %10p ", 1, -1);
+// 	b = ft_printf(" %-3.2u %10.42u ", 1, -1);
 // 	printf("\n");
 // 	printf("%d", b);
 // 	return (0);
-// 	// TEST(7, print(" %-10p %10p ", 1, -1));
-// 	// TEST(8, print(" %10p %-10p ", 1, -1));
-// 	// TEST(9, print(" %-10p %-10p ", 1, -1));
-// 	// TEST(10, print(" %10p %-10p ", 1, -1));
-// 	// TEST(3, print(" %-.2d ", 0));
-// 	// TEST(4, print(" %-2.2d ", 0));
 // }
