@@ -260,7 +260,7 @@ void	ft_percent(t_list *check)
 	}
 	else
 	{
-		if (check->zero == 1)
+		if (check->zero == '0')
 		{
 			ft_print_space('0', check, (check->width - 1));
 			ft_putchar('%');
@@ -593,18 +593,6 @@ int	ft_int_len(int value)
 		i++;
 	}
 	return (i);
-	// int	count;
-
-	// count = 0;
-	// if (value < 0)
-	// 	value = -value;
-	// while (value / 10 != 0)
-	// {
-	// 	count++;
-	// 	value /= 10;
-	// }
-	// count++;
-	// return (count);
 }
 
 int	ft_change_sign(int value)
