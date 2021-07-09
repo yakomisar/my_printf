@@ -377,8 +377,26 @@ void	ft_printnmnz(unsigned long ptr, int p_len, t_list *check)
 	}
 }
 
+int	ft_get_p_value(unsigned long value, t_list *check)
+{
+	int i;
+
+	i = 0;
+	if (value / 16 != 0)
+			i += ft_get_p_value(value / 16, check);
+	if ((value % 16) > 9)
+		ft_putchar('a' + (value % 16) - 10);
+	else
+		ft_putchar((value % 16) + '0');
+	i++;
+	return (i);
+}
+
 void	ft_print_p(unsigned long ptr, int len, t_list *check)
 {
+	int	temp_len;
+
+	temp_len = 0;
 	if (check->minus == 0)
 	{
 		if (check->zero == '0')
@@ -389,9 +407,12 @@ void	ft_print_p(unsigned long ptr, int len, t_list *check)
 	else if (check->minus == 1)
 	{
 		ft_putstr("0x", 2, check);
-		check->length += ft_putchars_fd('0', (check->precision - len));
-		ft_unl_to_hex(ptr, check);
-		check->length += ft_putchars_fd(' ', (check->width - (check->precision - len) - len - 2));
+		temp_len += ft_putchars_fd('0', (check->precision - len));
+		//check->length += ft_putchars_fd('0', (check->precision - len));
+		//ft_unl_to_hex(ptr, check);ß
+		temp_len += ft_get_p_value(ptr, check);
+		check->length += temp_len;
+		check->length += ft_putchars_fd(' ', (check->width - 2 - temp_len));
 	}
 }
 
@@ -742,23 +763,3 @@ int	ft_printf(const char *format, ...)
 	free(list);
 	return (list->length);
 }
-
-// int main()
-// {
-// 	// int a, b;
-// 	// a = printf(" %-10p %10p ", 1, -1);
-// 	// printf("%d", a);
-// 	// printf("\n");
-// 	// b = ft_printf(" %-10p %10p ", 1, -1);
-// 	// printf("%d", a);
-// 	// return (0);
-// 	int a, b;
-// 	// a = printf(" %.d ", 0);
-// 	// printf("\n");
-// 	// printf("%d", a);
-// 	// printf("\n");
-// 	b = printf(" 0*%0-*x*0 0*%0*x*0 ", 21, 1021, 21, -1011);
-// 	printf("\n");
-// 	printf("%d", b);
-// 	return (0);
-// }
